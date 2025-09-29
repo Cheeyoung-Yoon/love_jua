@@ -1,103 +1,132 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useRef, useMemo } from 'react'
+
+type AppState = 'closed' | 'playing-video' | 'open'
+
+export default function Page() {
+  const [appState, setAppState] = useState<AppState>('closed')
+  const [letterText, setLetterText] = useState('')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 })
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleOpenClick = () => {
+    setAppState('playing-video')
+  }
+
+  const handleVideoEnded = () => {
+    setAppState('open')
+  }
+
+  const handleVideoError = () => {
+    setAppState('open')
+  }
+
+  const displayed = useMemo(() => {
+    const { w: cw, h: ch } = containerSize
+    const { w: iw, h: ih } = imgNatural
+    if (cw === 0 || ch === 0 || iw === 0 || ih === 0) return { x: 0, y: 0, w: 0, h: 0 }
+
+    // FIT-HEIGHT math: image height == container height; width scales; horizontal centering
+    const scale = ch / ih
+    const w = iw * scale
+    const h = ch
+    const x = (cw - w) / 2
+    const y = 0
+    return { x, y, w, h }
+  }, [containerSize, imgNatural])
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <main className="fixed inset-0 w-screen h-[100dvh] min-h-[100svh] bg-black overflow-hidden">
+      <div ref={containerRef} className="relative w-full h-full">
+        {/* Closed State */}
+        {appState === 'closed' && (
+          <div className="relative w-full h-full">
+            <img
+              src="/close_state.png"
+              alt="Closed state"
+              className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 h-full w-auto select-none pointer-events-none"
+              draggable={false}
+              onLoad={(e) => {
+                const img = e.currentTarget as HTMLImageElement
+                setImgNatural({ w: img.naturalWidth, h: img.naturalHeight })
+              }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+              <button
+                onClick={handleOpenClick}
+                className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
+              >
+                Open
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Video Playing State */}
+        {appState === 'playing-video' && (
+          <div className="relative w-full h-full bg-black">
+            <video
+              ref={videoRef}
+              className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 h-full w-auto"
+              autoPlay
+              muted
+              playsInline
+              onEnded={handleVideoEnded}
+              onError={handleVideoError}
+            >
+              <source src="/process.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        {/* Open State */}
+        {appState === 'open' && (
+          <div className="relative w-full h-full">
+            <img
+              src="/open_state.png"
+              alt="Open state"
+              className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 h-full w-auto select-none pointer-events-none"
+              draggable={false}
+              onLoad={(e) => {
+                const img = e.currentTarget as HTMLImageElement
+                setImgNatural({ w: img.naturalWidth, h: img.naturalHeight })
+              }}
+            />
+
+            {/* Overlay Text Box */}
+            <div className="absolute inset-0 animate-fadeIn">
+              <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-[70%] h-[70%] px-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-2xl h-full flex items-center justify-center">
+                  <div className="w-full h-full overflow-y-auto">
+                    {letterText ? (
+                      <p className="text-gray-800 whitespace-pre-wrap leading-relaxed text-sm">
+                        {letterText}
+                      </p>
+                    ) : (
+                      <p className="text-gray-500 italic text-sm">
+                        This is letter content that will be displayed here...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-fadeIn">
+                <button
+                  onClick={() => setAppState('closed')}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  )
 }
